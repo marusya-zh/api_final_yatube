@@ -46,7 +46,6 @@ class FollowSerializer(serializers.ModelSerializer):
         model = Follow
         fields = ('user', 'following')
 
-
     def create(self, validated_data):
         user = validated_data.get('user')
         following = validated_data.get('following')
