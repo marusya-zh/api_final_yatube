@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from posts.models import Comment, Follow, Group, Post
+from posts.models import Comment, Follow, Group, Post, User
 
 
 class PostSerializer(serializers.ModelSerializer):
@@ -38,31 +38,38 @@ class FollowSerializer(serializers.ModelSerializer):
         slug_field='username'
     )
     following = serializers.SlugRelatedField(
-        read_only=True,
-        slug_field='username'
+        slug_field='username',
+        queryset=User.objects.all()
     )
 
     class Meta:
         model = Follow
+        # Указываем конкретные поля, поскольку вывод id для подписок
+        # не требуется (в отличие от, например, постов и комментариев),
+        # и «Explicit is better than implicit». )
         fields = ('user', 'following')
 
     def create(self, validated_data):
         user = validated_data.get('user')
         following = validated_data.get('following')
 
-        if Follow.objects.filter(user=user, following=following).exists():
+        if user == following:
             raise serializers.ValidationError(
                 {
-                    'following': 'Недопустимое значение поля. '
-                                 'Такая подписка уже существует.'
+                    "following": [
+                        "Недопустимое значение поля. "
+                        "Подписка на себя запрещена."
+                    ]
                 }
             )
-        elif user == following:
+        elif Follow.objects.filter(user=user, following=following).exists():
             raise serializers.ValidationError(
                 {
-                    'following': 'Недопустимое значение поля. '
-                                 'Подписка на себя запрещена.'
+                    "following": [
+                        "Недопустимое значение поля. "
+                        "Такая подписка уже существует."
+                    ]
                 }
             )
 
-        return Follow.objects.create(user=user, following=following)
+        return Follow.objects.create(**validated_data)
