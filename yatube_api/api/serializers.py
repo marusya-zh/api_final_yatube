@@ -44,9 +44,6 @@ class FollowSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Follow
-        # Указываем конкретные поля, поскольку вывод id для подписок
-        # не требуется (в отличие от, например, постов и комментариев),
-        # и «Explicit is better than implicit». )
         fields = ('user', 'following')
 
     def create(self, validated_data):
